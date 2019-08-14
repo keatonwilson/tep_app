@@ -69,7 +69,8 @@ ui <- navbarPage('Select Season',
                                   br(),
                                   fileInput("file1", "Choose CSV File",
                                             accept = c("text/csv",
-                                                       "text/comma-separated-values,text/plain",
+                                                       "text/comma-separated-values,
+                                                       text/plain",
                                                        ".csv"))
                               ),
                               mainPanel(

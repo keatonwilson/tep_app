@@ -8,6 +8,7 @@
 #
 
 library(shiny)
+library(tidyverse)
 
 #Data munging function
 source("./power_breakdown.R")
@@ -18,7 +19,17 @@ source("./tep_plans.R")
 
 #Custom TEP calculcation functions
 server <- function(input, output) {
-        if(is.null(input$file1)) {
+    
+            df_upload = reactive({
+                inFile = input$file1
+                if (is.null(inFile)) {
+                    return(NULL)
+                } else {            
+                df = read_csv(input$file1$datapath, skip = 1)
+                summary_df = power_summary(df)
+                return(summary_df)
+                }
+            })
             output$table_costs_summer <- renderTable({
                 tep_plans_summer(total_kwh_on = input$total_on, 
                       total_kwh_off = input$total_off,
@@ -29,25 +40,21 @@ server <- function(input, output) {
                              total_kwh_off = input$total_off_w,
                              max_kw_in_hour = input$max_kW_w)
             })
-            
-        } else {
-        
-            df = read_csv(input$file1$datapath, skip = 1)
-            summary_df = power_summary(df)
-    
-                if(summary_df$season == "summer") {
+            if (is.null(df_upload)) {
+                return(NULL)
+            } else {
+                if(df_upload$season == "summer") {
                     output$table_costs_data_upload <- renderTable({
-                        tep_plans(total_kwh_on = summary_df$total_peak,
-                                  total_kwh_off = summary_df$total_offpeak,
-                                  max_kw_in_hour = summary_df$max_1hour)
+                        tep_plans(total_kwh_on = df_upload$total_peak,
+                                  total_kwh_off = df_upload$total_offpeak,
+                                  max_kw_in_hour = df_upload$max_1hour)
                     })
                 } else {
                     output$table_costs_data_upload<- renderTable({
-                        tep_plans_winter(total_kwh_on = summary_df$total_peak,
-                                         total_kwh_off = summary_df$total_offpeak,
-                                         max_kw_in_hour = summary_df$max_1hour)
+                        tep_plans_winter(total_kwh_on = df_upload$total_peak,
+                                         total_kwh_off = df_upload$total_offpeak,
+                                         max_kw_in_hour = df_upload$max_1hour)
                     })
-                }    
-        }
-        
+                }
+            }    
 }
